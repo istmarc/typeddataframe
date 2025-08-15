@@ -5,6 +5,10 @@ import std.stdio;
 import numir;
 import mir.ndslice;
 
+import std.conv;
+import std.typecons;
+import std.sumtype;
+
 void main()
 {
    auto df = new TypedDataFrame!(float, double, string)("DataFrame DF");
@@ -56,7 +60,7 @@ void main()
       // set value
       newdf.setValue!float(0, 0, 99.0f);
       // Get value [i,j]
-      float value = newdf.opIndex!float(0, 0);
+      float value = newdf[0, 0].get!float;
       writeln("value[0,0] = ", value);
       writeln(newdf);
       writeln("Get the first column");

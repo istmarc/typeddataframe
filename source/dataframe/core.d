@@ -60,6 +60,11 @@ alias ColumnValue = SumType!(Slice!(int*), Slice!(long*), Slice!(ulong*),
    Slice!(float*), Slice!(double*), Slice!(string*));
 
 /++
+   Cell value type.
++/
+alias CellValue = SumType!(int, long, ulong, float, double, string);
+
+/++
 Slice fo a data frame.
 +/
 class DataFrameSlice(Ts...){
@@ -284,11 +289,31 @@ public:
       return *values;
    }
 
-   // Overload .opIndex!T(i, j)
-   ref T opIndex(T)(size_t i, size_t j) const {
-      alias SliceType = Slice!(T*);
-      auto values = cast(SliceType*) colValues[j];
-      return (*values)[i];
+   // Overload .opIndex(i, j) or [i,j]
+   CellValue opIndex(size_t i, size_t j) const {
+      auto valuesPtr = colValues[j];
+      auto type = colTypes[j];
+      assert(type != Type.None);
+
+      if (type == Type.Int) {
+         auto values = cast(Slice!(int*)*) valuesPtr;
+         return CellValue((*values)[i]);
+      } else if (type == Type.Long) {
+         auto values = cast(Slice!(long*)*) valuesPtr;
+         return CellValue((*values)[i]);
+      } else if (type == Type.ULong) {
+         auto values = cast(Slice!(ulong*)*) valuesPtr;
+         return CellValue((*values)[i]);
+      } else if (type == Type.Float) {
+         auto values = cast(Slice!(float*)*) valuesPtr;
+         return CellValue((*values)[i]);
+      } else if (type == Type.Double){
+         auto values = cast(Slice!(double*)*) valuesPtr;
+         return CellValue((*values)[i]);
+      } else {
+         auto values = cast(Slice!(string*)*) valuesPtr;
+         return CellValue((*values)[i]);
+      }
    }
 
    // Overload [[], ]
