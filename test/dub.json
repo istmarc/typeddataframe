@@ -1,0 +1,15 @@
+{
+	"description": "Test for data frame",
+	"dependencies": {
+		"numir": "~>2.0.6",
+		"dataframe" : {
+			"path": "../"
+		}
+	},
+	"authors": [
+		"Marc"
+	],
+	"copyright": "Copyright © 2025, Marc",
+	"license": "MIT",
+	"name": "test"
+}
