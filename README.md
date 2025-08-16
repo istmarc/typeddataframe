@@ -25,8 +25,9 @@ void main()
    // Assign a value
    slice = 1.0f;
    writeln(df);
-   // Asignment a mir slice
+   // Asign a mir slice
    slice = [1.0f, 2.0f, 3.0f].sliced(3);
+   writeln(df);
 }
 ```
 
