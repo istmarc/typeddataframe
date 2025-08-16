@@ -1,6 +1,7 @@
 {
 	"description": "Data frames in D",
 	"dependencies": {
+		"numir": "~>2.0.6",
 		"mir": "~>3.2.3"
 	},
 	"authors": [

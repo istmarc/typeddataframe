@@ -1,7 +1,6 @@
 {
 	"description": "Test for data frame",
 	"dependencies": {
-		"numir": "~>2.0.6",
 		"dataframe" : {
 			"path": "../"
 		}
