@@ -65,13 +65,15 @@ void testBasics()
       newdf.setCol(0, "x", x);
       newdf.setCol(1, "y", y);
       // set value
-      newdf.setValue!float(0, 0, 99.0f);
+      //newdf.setValue!float(0, 0, 99.0f);
+      alias SliceType = Slice!(float*);
+      newdf[0].get!SliceType[0] = 99.0f;
       // Get value [i,j]
       float value = newdf[0, 0].get!float;
       writeln("value[0,0] = ", value);
       writeln(newdf);
       writeln("Get the first column");
-      writeln(newdf.opIndex!float(0));
+      writeln(newdf[0]);
 
       {
          writeln("Slices [0, 0...2]");

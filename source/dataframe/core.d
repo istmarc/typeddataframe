@@ -8,6 +8,7 @@ import std.conv;
 import std.typecons;
 import std.string;
 import std.meta;
+import std.algorithm: min, max;
 
 import mir.ndslice;
 import numir;
@@ -361,17 +362,40 @@ public:
       }
    }
 
-   void setValue(T)(size_t row, size_t col, T value) {
-      auto values = cast(Slice!(T*)*) colValues[col];
-      (*values)[row] = value;
+   // Return whether the data frame is empty
+   bool empty() const {
+      bool ret = false;
+      foreach(type; colTypes) {
+         if (type == Type.None) {
+            ret = true;
+            break;
+         }
+      }
+      return ret;
    }
 
+   // Get the number of columns
+   size_t cols() const { return Ts.length;}
+
+   // Get the number of rows
+   size_t rows() const {
+      alias T = Ts[0];
+      alias SliceType = Slice!(T*);
+      auto colPtr = colValues[0];
+      auto col = cast(SliceType*) colPtr;
+      return col.elementCount;
+   }
+
+   // Set the title
    void setTitle(string title) {this.title = title;}
 
+   // Set the index name
    void setIndexName(string indexName) {this.indexName = indexName;}
 
+   // Get the name at index
    string name(size_t  index) const {return colNames[index];}
 
+   // Return the column names
    string[Ts.length] names() const {return colNames;}
 
    // Set the column at index.
@@ -413,16 +437,16 @@ public:
       colValues[Index] = cast(void*) valuesPtr;
       // Set the column type
       colTypes[Index] = getColumnType!T();
-      //auto ptr = cast(Slice!(T*)*) colValues[index];
    }
 
-   // Get the column at index
+   // Get the column at index and convert it to Slice!(T*)
    Slice!(T*) col(T)(size_t index) const {
       //alias ReturnType = Slice!(T*);
       auto ptr = cast(Slice!(T*)*) colValues[index];
       return *ptr;
    }
 
+   // Get the column at inde
    ColumnValue col(size_t index) const {
       auto type = colTypes[index];
       assert(type != Type.None, "Column at " ~ to!string(index) ~ " must have type.");
@@ -479,12 +503,21 @@ public:
       return df;
    }
 
+   // Get the column at index [index]
+   ColumnValue opIndex(size_t index) const {
+      return col(index);
+   }
 
-   // Overload .opIndex!T(index) to get the column at index i
-   ref Slice!(T*) opIndex(T)(size_t index) const {
-      alias SliceType = Slice!(T*);
-      auto values = cast(SliceType*) colValues[index];
-      return *values;
+   // Get the column named name [name]
+   ColumnValue opIndex(string name) const {
+      size_t index = 0;
+      foreach(i; 0..Ts.length) {
+         if (colNames[i] == name) {
+            index = i;
+            break;
+         }
+      }
+      return col(index);
    }
 
    // Overload .opIndex(i, j) or [i,j]
@@ -535,7 +568,26 @@ public:
       return [start, end];
    }
 
+   // Head first 5 rows with corresponding rows
+   DataFrameSlice!Ts head() {
+      assert(!empty(), "Data frame must not be empty");
+      size_t col = cols();
+      size_t row = rows();
+      return this[0..min(5, row), 0..col];
+   }
+
+   // Tail last 5 rows with corresponding columns
+   DataFrameSlice!Ts tail() {
+      assert(!empty(), "Data frame must not be empty");
+      size_t col = cols();
+      size_t row = rows();
+      return this[max(0, row-5)..row, 0..col];
+   }
+
+
    override string toString(){
+      assert(!empty(), "Data frame must not be empty");
+
       string str = "";
       if (title.length >0) {
          str ~= title;
