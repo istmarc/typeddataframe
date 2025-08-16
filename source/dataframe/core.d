@@ -386,6 +386,11 @@ public:
       return col.elementCount;
    }
 
+   // Get the shape
+   size_t[2] shape() const {
+      return [rows(), cols()];
+   }
+
    // Set the title
    void setTitle(string title) {this.title = title;}
 
