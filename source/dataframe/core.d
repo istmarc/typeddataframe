@@ -7,6 +7,7 @@ import std.container;
 import std.conv;
 import std.typecons;
 import std.string;
+import std.meta;
 
 import mir.ndslice;
 import numir;
@@ -280,7 +281,7 @@ public:
    }
 
    // Get the slice
-   auto slice(T)() {
+   Slice!(T*) slice(T)() {
       assert((colStart + 1 == colEnd) || (colStart + 1 != colEnd && rowStart + 1 == rowEnd),
          "DataFrameSlice must have only one row or one column to convert it to a Slice!(T*)");
       if (colStart + 1 == colEnd) {
@@ -561,4 +562,33 @@ DataFrame alias for TypedDataFrame
 +/
 alias DataFrame(Ts...) = TypedDataFrame!Ts;
 
+/++
+Get type string, Slice!(Ts[0]), string, Slice!(Ts[1]), ....
++/
+template SliceTupleType(T, Ts...) {
+   alias Type = AliasSeq!(string, Slice!(T*), SliceTupleType!Ts.Type);
+}
+template SliceTupleType(T){
+   alias Type = AliasSeq!(string, Slice!(T*));
+}
+
+/++
+   Create a new data frame from data.
+   dataFrame("col1Name", col1, "col2Name", col2, ...)
++/
+DataFrame!Ts dataFrame(Ts...)(SliceTupleType!Ts.Type values) {
+   auto df = new DataFrame!Ts();
+   enum size_t length = values.length;
+   assert(length % 2 == 0);
+   // Set the data
+   static foreach(i;0..length) {
+      static if (i%2 == 1) {
+         {
+            alias T = Ts[i/2];
+            df.setCol!T(i/2, values[i-1], values[i]);
+         }
+      }
+   }
+   return df;
+}
 
