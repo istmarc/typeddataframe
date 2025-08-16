@@ -10,7 +10,8 @@ import numir;
 
 void main()
 {
-   auto df = dataFrame!(float, double, string)("x", empty!float(3), "y", empty!double(3), "z", ["A", "B", "C"].sliced(3));
+   auto df = dataFrame!(float, double, string)(
+      "x", empty!float(3), "y", empty!double(3), "z", ["A", "B", "C"].sliced(3));
    // shape
    writeln(df.shape());
    // print
