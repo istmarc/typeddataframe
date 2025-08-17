@@ -5,7 +5,7 @@ Data frames with type information.
 ## Getting started
 
 ```d
-import dataframe;
+import typeddataframe;
 import numir;
 
 void main()
@@ -25,7 +25,7 @@ void main()
    // Assign a value
    slice = 1.0f;
    writeln(df);
-   // Asign a mir slice
+   // Assign a mir slice
    slice = [1.0f, 2.0f, 3.0f].sliced(3);
    writeln(df);
 }
