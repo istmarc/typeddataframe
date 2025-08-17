@@ -281,7 +281,7 @@ public:
       }
    }
 
-   // Get the slice
+   // Convert to a slice
    Slice!(T*) slice(T)() {
       assert((colStart + 1 == colEnd) || (colStart + 1 != colEnd && rowStart + 1 == rowEnd),
          "DataFrameSlice must have only one row or one column to convert it to a Slice!(T*)");
@@ -299,6 +299,21 @@ public:
          }
          return col;
       }
+   }
+
+
+   // Convert to a matrix
+   Slice!(T*, 2) matrix(T)() {
+      alias SliceType = Slice!(T*, 2);
+      size_t cols = colEnd - colStart;
+      size_t rows = rowEnd - rowStart;
+      auto mat = empty!T([rows, cols]);
+      for (size_t i = rowStart; i < rowEnd; i++) {
+         for (size_t j = colStart; j < colEnd; j++) {
+            mat[i-rowStart, j-colStart] = data[i, j].get!T;
+         }
+      }
+      return mat;
    }
 
    override string toString() {

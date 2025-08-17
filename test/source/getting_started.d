@@ -80,4 +80,12 @@ void testGettingStarted()
       writeln(df);
    }
 
+   {
+      auto df = dataFrame!(float, float)("x", ones!float(3), "y", zeros!float(3));
+      writeln(df);
+      // Slicing
+      auto slice = df[0..3, 0..2].matrix!float;
+      writeln(slice);
+   }
+
 }
