@@ -1,6 +1,6 @@
 module testdataframe.creation;
 
-import dataframe;
+import typeddataframe;
 
 import std.stdio;
 

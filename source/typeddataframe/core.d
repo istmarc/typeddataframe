@@ -1,4 +1,4 @@
-module dataframe.core;
+module typeddataframe.core;
 
 
 import std.variant;
