@@ -593,7 +593,11 @@ public:
    override string toString(){
       assert(!empty(), "Data frame must not be empty");
 
-      string str = "";
+      string str = "DataFrame[";
+      str ~= rows().to!string;
+      str ~= "x";
+      str ~= cols().to!string;
+      str ~= "]\n";
       if (title.length >0) {
          str ~= title;
          str ~= "\n";

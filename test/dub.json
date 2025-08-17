@@ -1,7 +1,7 @@
 {
 	"description": "Test for data frame",
 	"dependencies": {
-		"dataframe" : {
+		"typeddataframe" : {
 			"path": "../"
 		}
 	},
