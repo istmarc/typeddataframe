@@ -15,7 +15,7 @@ import numir: empty;
 
 // Read from csv
 auto readCsv(IndexType, Ts...)(string fileName) {
-   auto df = new DataFrame!Ts();
+   auto df = new DataFrame!(IndexType, Ts)();
    auto file = File(fileName, "r");
    enum size_t cols = Ts.length;
    // How to read the first line of a csv fil
@@ -33,6 +33,7 @@ auto readCsv(IndexType, Ts...)(string fileName) {
          df.setCol(i, names[i+1].to!string, empty!T(rows));
       }
    }
+   df.setIndex(empty!IndexType(rows));
    file.close();
    auto newFile = File(fileName, "r");
    auto newRecords = csvReader!(Tuple!(IndexType, Ts))(newFile.byLine.joiner("\n"), null);
@@ -49,6 +50,7 @@ auto readCsv(IndexType, Ts...)(string fileName) {
          }
       }
       // TODO Set the index
+      df.setIndex(row, record[0]);
       row++;
    }
 

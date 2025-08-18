@@ -13,10 +13,11 @@ import std.sumtype;
 
 void testBasics()
 {
-   auto df = new TypedDataFrame!(float, double, string)("DataFrame DF");
+   auto df = new TypedDataFrame!(ulong, float, double, string)("DataFrame DF");
    df.setCol(0, "a", zeros!float(10));
    df.setCol(1, "b", ones!double(10));
    df.setCol(2, "c", ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"].sliced(10));
+   df.fillIndex();
 
    auto col0 = df.col(0);
    writeln(col0);
@@ -61,9 +62,10 @@ void testBasics()
    }
 
    {
-      auto newdf = new DataFrame!(float, double)();
+      auto newdf = new DataFrame!(ulong, float, double)();
       newdf.setCol(0, "x", x);
       newdf.setCol(1, "y", y);
+      newdf.fillIndex();
       // set value
       //newdf.setValue!float(0, 0, 99.0f);
       alias SliceType = Slice!(float*);
@@ -139,9 +141,10 @@ void testBasics()
 
       {
          writeln("Convert a data frame slice row to a slice");
-         auto d = new DataFrame!(float, float)("DF");
+         auto d = new DataFrame!(ulong, float, float)("DF");
          d.setCol(0, "x", empty!float(5));
          d.setCol(1, "y", empty!float(5));
+         d.fillIndex();
          writeln(d);
          writeln(d[2, 0..2].slice!float);
       }

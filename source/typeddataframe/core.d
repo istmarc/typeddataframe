@@ -73,9 +73,9 @@ alias CellValue = SumType!(int, long, ulong, float, double, string);
 /++
 Data frame slice.
 +/
-class DataFrameSlice(Ts...){
+class DataFrameSlice(IndexType, Ts...){
 private:
-   TypedDataFrame!Ts data;
+   TypedDataFrame!(IndexType, Ts) data;
    ulong[] selectedCols;
    ulong[] selectedRows;
 
@@ -104,7 +104,7 @@ private:
    }
 
 public:
-   this(TypedDataFrame!Ts df, ulong[] rows, ulong[] cols, bool fromSlice) {
+   this(TypedDataFrame!(IndexType, Ts) df, ulong[] rows, ulong[] cols, bool fromSlice) {
       data = df;
       if (fromSlice) {
          if (rows.length == 2 || rows.length == 1) {
@@ -384,13 +384,14 @@ public:
 /++
 Typed data frames, data frames with type information.
 +/
-class TypedDataFrame(Ts...) {
+class TypedDataFrame(IndexType, Ts...) {
 private:
    string title = "";
    string indexName = "";
    string[Ts.length] colNames;
    Type[Ts.length] colTypes;
    void*[Ts.length] colValues;
+   Slice!(IndexType*) index;
 
 private:
    bool hasColName(string name) const {
@@ -416,9 +417,14 @@ private:
       return idx;
    }
 
-
 public:
-   this(const(string) title = "") { this.title = title;}
+   this(const(string) title = "") {
+      this.title = title;
+   }
+
+   this(Slice!(IndexType*) index, const(string) title="") {
+      this.index = index;
+   }
 
    ~this() {
       foreach(i; 0..Ts.length) {
@@ -455,6 +461,35 @@ public:
    // Get the shape
    size_t[2] shape() const {
       return [rows(), cols()];
+   }
+
+   // Fill index with 0..rows
+   void fillIndex() {
+      static if (__traits(isSame, IndexType, string)) {
+         size_t row = this.rows();
+         size_t value = 0;
+         this.index = numir.empty!IndexType(row);
+         foreach(i; 0..row) {
+            index[i] = value.to!string;
+            value++;
+         }
+      } else {
+         size_t row = this.rows();
+         this.index = numir.empty!IndexType(row);
+         index[0] = cast(IndexType) 0;
+         foreach(i; 1..row) {
+            index[i] = index[i-1] + IndexType(1);
+         }
+      }
+   }
+
+   // Set the ith index to value
+   void setIndex(size_t i, IndexType value) {
+      index[i] = value;
+   }
+
+   void setIndex(Slice!(IndexType*) values) {
+      index = values;
    }
 
    // Set the title
@@ -537,8 +572,8 @@ public:
    }
 
    // Create a new data frame by adding a column at the end.
-   TypedDataFrame!(Ts, T) addCol(T)(string name, Slice!(T*) values) const {
-      auto df = new TypedDataFrame!(Ts, T)();
+   TypedDataFrame!(IndexType, Ts, T) addCol(T)(string name, Slice!(T*) values) const {
+      auto df = new TypedDataFrame!(IndexType, Ts, T)();
       // Copy data
       static foreach(i; 0..Ts.length) {
          df.setCol!(Ts[i])(i, this.name(i), this.col(i));
@@ -552,9 +587,9 @@ public:
    auto addCol(size_t Index, T)(string name, Slice!(T*) values) const {
       assert(!this.hasColName(name));
       static if (Index == 0) {
-         auto df = new TypedDataFrame!(T, Ts)();
+         auto df = new TypedDataFrame!(IndexType, T, Ts)();
       } else {
-         auto df = new TypedDataFrame!(Ts[0..Index], T, Ts[Index..Ts.length])();
+         auto df = new TypedDataFrame!(IndexType, Ts[0..Index], T, Ts[Index..Ts.length])();
       }
       // Copy data
       static if (Index > 0) {
@@ -577,9 +612,9 @@ public:
    // Remove a column at Index
    auto removeCol(size_t Index)() const {
       static if (Index == 0) {
-         auto df = new TypedDataFrame!(Ts[1..Ts.length])();
+         auto df = new TypedDataFrame!(IndexType, Ts[1..Ts.length])();
       } else {
-         auto df = new TypedDataFrame!(Ts[0..Index], Ts[Index+1..Ts.length])();
+         auto df = new TypedDataFrame!(IndexType, Ts[0..Index], Ts[Index+1..Ts.length])();
       }
       writeln(df.names());
       // Copy data
@@ -641,20 +676,20 @@ public:
    }
 
    // Overload [[], ]
-   DataFrameSlice!Ts opIndex(size_t[] i, size_t j) {
-      DataFrameSlice!Ts df = new DataFrameSlice!Ts(this, i, [j], true);
+   DataFrameSlice!(IndexType, Ts) opIndex(size_t[] i, size_t j) {
+      DataFrameSlice!(IndexType, Ts) df = new DataFrameSlice!(IndexType, Ts)(this, i, [j], true);
       return df;
    }
 
    // Overload [ , []]
-   DataFrameSlice!Ts opIndex(size_t i, size_t[] j) {
-      DataFrameSlice!Ts df = new DataFrameSlice!Ts(this, [i], j, true);
+   DataFrameSlice!(IndexType, Ts) opIndex(size_t i, size_t[] j) {
+      DataFrameSlice!(IndexType, Ts) df = new DataFrameSlice!(IndexType, Ts)(this, [i], j, true);
       return df;
    }
 
    // Overload [[], []]
-   DataFrameSlice!Ts opIndex(size_t[] i, size_t[] j) {
-      DataFrameSlice!Ts df = new DataFrameSlice!Ts(this, i, j, true);
+   DataFrameSlice!(IndexType, Ts) opIndex(size_t[] i, size_t[] j) {
+      DataFrameSlice!(IndexType, Ts) df = new DataFrameSlice!(IndexType, Ts)(this, i, j, true);
       return df;
    }
 
@@ -663,13 +698,13 @@ public:
    }
 
    // Select rows and columns
-   DataFrameSlice!Ts select(ulong[] rows, ulong[] cols) {
-      DataFrameSlice!Ts df = new DataFrameSlice!Ts(this, rows, cols, false);
+   DataFrameSlice!(IndexType, Ts) select(ulong[] rows, ulong[] cols) {
+      DataFrameSlice!(IndexType, Ts) df = new DataFrameSlice!(IndexType, Ts)(this, rows, cols, false);
       return df;
    }
 
    // Select rows and columns using names
-   DataFrameSlice!Ts select(ulong[] rows, string[] names) {
+   DataFrameSlice!(IndexType, Ts) select(ulong[] rows, string[] names) {
       ulong[] cols;
       cols.length = names.length;
       for(size_t i = 0; i < names.length; i++) {
@@ -681,7 +716,7 @@ public:
    }
 
    // Head first 5 rows with corresponding rows
-   DataFrameSlice!Ts head() {
+   DataFrameSlice!(IndexType, Ts) head() {
       assert(!empty(), "Data frame must not be empty");
       size_t col = cols();
       size_t row = rows();
@@ -689,7 +724,7 @@ public:
    }
 
    // Tail last 5 rows with corresponding columns
-   DataFrameSlice!Ts tail() {
+   DataFrameSlice!(IndexType, Ts) tail() {
       assert(!empty(), "Data frame must not be empty");
       size_t col = cols();
       size_t row = rows();
@@ -709,6 +744,9 @@ public:
          str ~= title;
          str ~= "\n";
       }
+      str ~= "index: ";
+      str ~= index.to!string;
+      str ~= "\n";
 
       enum size_t cols = Ts.length;
       //size_t rows = this.col!0().elementCount;
@@ -723,12 +761,13 @@ public:
       }
       return str;
    }
+
 }
 
 /++
 DataFrame alias for TypedDataFrame
 +/
-alias DataFrame(Ts...) = TypedDataFrame!Ts;
+alias DataFrame(IndexType, Ts...) = TypedDataFrame!(IndexType, Ts);
 
 /++
 Get type string, Slice!(Ts[0]), string, Slice!(Ts[1]), ....
@@ -744,8 +783,8 @@ template SliceTupleType(T){
    Create a new data frame from data.
    dataFrame("col1Name", col1, "col2Name", col2, ...)
 +/
-DataFrame!Ts dataFrame(Ts...)(SliceTupleType!Ts.Type values) {
-   auto df = new DataFrame!Ts();
+DataFrame!(IndexType, Ts) dataFrame(IndexType, Ts...)(SliceTupleType!Ts.Type values) {
+   auto df = new DataFrame!(IndexType, Ts)();
    enum size_t length = values.length;
    assert(length % 2 == 0);
    // Set the data
@@ -757,6 +796,7 @@ DataFrame!Ts dataFrame(Ts...)(SliceTupleType!Ts.Type values) {
          }
       }
    }
+   df.fillIndex();
    return df;
 }
 

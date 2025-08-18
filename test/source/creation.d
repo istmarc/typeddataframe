@@ -27,7 +27,7 @@ void testCreation()
 
    auto z = ["a", "b", "c", "d", "e"].sliced(5);
 
-   auto df = dataFrame!(float, double, string)("x", x, "y", y, "z", z);
+   auto df = dataFrame!(ulong, float, double, string)("x", x, "y", y, "z", z);
    writeln(df);
 
 }

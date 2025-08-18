@@ -31,7 +31,7 @@ void testSelection()
 
       auto z = ["a", "b", "c", "d", "e", "f"].sliced(n);
 
-      auto df = dataFrame!(float, double, string)("x", x, "y", y, "z", z);
+      auto df = dataFrame!(ulong, float, double, string)("x", x, "y", y, "z", z);
 
       {
          auto newdf = df.select([0,n], ["x"]);

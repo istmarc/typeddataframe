@@ -31,7 +31,7 @@ void testGettingStarted()
 
       auto z = ["a", "b", "c", "d", "e", "f"].sliced(n);
 
-      auto df = dataFrame!(float, double, string)("x", x, "y", y, "z", z);
+      auto df = dataFrame!(ulong, float, double, string)("x", x, "y", y, "z", z);
       writeln("head");
       writeln(df.head());
       writeln("tail");
@@ -42,7 +42,7 @@ void testGettingStarted()
    }
 
    {
-      auto df = dataFrame!(float, double, string)("x", empty!float(4), "y", ones!double(4), "z", ["a", "b", "c", "d"].sliced(4));
+      auto df = dataFrame!(ulong, float, double, string)("x", empty!float(4), "y", ones!double(4), "z", ["a", "b", "c", "d"].sliced(4));
       writeln(df);
       // Acees column
       writeln(df["z"]);
@@ -55,9 +55,10 @@ void testGettingStarted()
    }
 
    {
-      auto df = new DataFrame!(long, string)();
+      auto df = new DataFrame!(ulong, long, string)();
       df.setCol(0, "A", [1.0, 2.0].sliced(2));
       df.setCol(1, "B", ["X", "Y"].sliced(2));
+      df.fillIndex();
       writeln(df);
       // Get the number of rows
       writeln(df.rows());
@@ -68,7 +69,7 @@ void testGettingStarted()
    }
 
    {
-      auto df = dataFrame!(float, double, string)("x", empty!float(3), "y", empty!double(3), "z", ["A", "B", "C"].sliced(3));
+      auto df = dataFrame!(ulong, float, double, string)("x", empty!float(3), "y", empty!double(3), "z", ["A", "B", "C"].sliced(3));
       writeln(df);
       // Get the column at index
       writeln(df[0]);
@@ -85,7 +86,7 @@ void testGettingStarted()
    }
 
    {
-      auto df = dataFrame!(float, float)("x", ones!float(3), "y", zeros!float(3));
+      auto df = dataFrame!(ulong, float, float)("x", ones!float(3), "y", zeros!float(3));
       writeln(df);
       // Slicing
       auto slice = df[0..3, 0..2].matrix!float;
@@ -94,7 +95,7 @@ void testGettingStarted()
 
    {
       writeln("Remove a column");
-      auto df = dataFrame!(float, float)("x", ones!float(3), "y", zeros!float(3));
+      auto df = dataFrame!(ulong, float, float)("x", ones!float(3), "y", zeros!float(3));
       writeln(df);
       auto newdf = df.removeCol!1();
       writeln(newdf);
