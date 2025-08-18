@@ -800,3 +800,25 @@ DataFrame!(IndexType, Ts) dataFrame(IndexType, Ts...)(SliceTupleType!Ts.Type val
    return df;
 }
 
+/++
+   Create a new data frame from data and index.
+   dataFrame("col1Name", col1, "col2Name", col2, ..., index)
++/
+DataFrame!(IndexType, Ts) dataFrame(IndexType, Ts...)(SliceTupleType!Ts.Type values, Slice!(IndexType*) index) {
+   auto df = new DataFrame!(IndexType, Ts)();
+   enum size_t length = values.length;
+   assert(length % 2 == 0);
+   // Set the data
+   static foreach(i;0..length) {
+      static if (i%2 == 1) {
+         {
+            alias T = Ts[i/2];
+            df.setCol!T(i/2, values[i-1], values[i]);
+         }
+      }
+   }
+   df.setIndex(index);
+   return df;
+}
+
+
