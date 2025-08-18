@@ -100,12 +100,4 @@ void testGettingStarted()
       writeln(newdf);
    }
 
-   {
-      writeln("Remove a column by its name");
-      auto df = dataFrame!(float, float)("x", ones!float(3), "y", zeros!float(3));
-      writeln(df);
-      auto newdf = df.removeCol("y");
-      writeln(newdf);
-   }
-
 }
