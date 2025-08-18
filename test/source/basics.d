@@ -96,6 +96,7 @@ void testBasics()
       {
          writeln("Assign value to slices");
          auto slice = newdf[0..10, 0];
+         writeln(slice);
          slice = 99.0f;
          writeln("slice: ", slice);
          writeln("newdf: ", newdf);
@@ -128,6 +129,8 @@ void testBasics()
          newdf.setTitle("New DataFrame");
          writeln(newdf);
          auto dfslice = df[0..10, 0];
+         writeln("Df slice");
+         writeln(dfslice);
          auto newdfslice = newdf[0..10, 0].slice!float;
          writeln("slice = ", newdfslice);
          dfslice = newdfslice;

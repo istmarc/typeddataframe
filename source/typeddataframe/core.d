@@ -76,10 +76,8 @@ Data frame slice.
 class DataFrameSlice(Ts...){
 private:
    TypedDataFrame!Ts data;
-   size_t rowStart;
-   size_t rowEnd;
-   size_t colStart;
-   size_t colEnd;
+   ulong[] selectedCols;
+   ulong[] selectedRows;
 
    Tuple!(ulong, ulong) getColumnIndices(ulong[] colIndices) {
       size_t colLength = colIndices.length;
@@ -106,22 +104,44 @@ private:
    }
 
 public:
-   this(TypedDataFrame!Ts df, ulong[] rows, ulong[] cols) {
-      this.data = df;
-      auto colIndices = getColumnIndices(cols);
-      colStart = colIndices[0];
-      colEnd = colIndices[1];
-      auto rowIndices = getRowIndices(rows);
-      rowStart = rowIndices[0];
-      rowEnd = rowIndices[1];
+   this(TypedDataFrame!Ts df, ulong[] rows, ulong[] cols, bool fromSlice) {
+      data = df;
+      if (fromSlice) {
+         if (rows.length == 2 || rows.length == 1) {
+            auto rowIndices = getRowIndices(rows);
+            size_t rowStart = rowIndices[0];
+            size_t rowEnd = rowIndices[1];
+            assert(rowEnd > rowStart);
+            selectedRows.length = rowEnd - rowStart;
+            for(size_t i = rowStart; i < rowEnd; i++) {
+               selectedRows[i-rowStart] = i;
+            }
+         } else {
+            selectedRows = rows;
+         }
+         if (cols.length == 2 || cols.length == 2) {
+            auto colIndices = getColumnIndices(cols);
+            size_t colStart = colIndices[0];
+            size_t colEnd = colIndices[1];
+            selectedCols.length = colEnd - colStart;
+            for(size_t i = colStart; i <colEnd; i++) {
+               selectedCols[i - colStart] = i;
+            }
+         } else {
+            selectedCols = cols;
+         }
+      } else {
+         selectedRows = rows;
+         selectedCols = cols;
+      }
    }
 
    // this = int
    void opAssign(int value) {
-      for(size_t i = colStart; i < colEnd; i++) {
+      foreach(i; selectedCols) {
          alias SliceType = Slice!(int*);
          auto col = data.col(i).get!SliceType;
-         for (size_t j = rowStart; j < rowEnd; j++) {
+         foreach(j; selectedRows) {
             col[j] = value;
          }
       }
@@ -129,10 +149,10 @@ public:
 
    // this = long
    void opAssign(long value) {
-      for(size_t i = colStart; i < colEnd; i++) {
+      foreach(i; selectedCols) {
          alias SliceType = Slice!(long*);
          auto col = data.col(i).get!SliceType;
-         for (size_t j = rowStart; j < rowEnd; j++) {
+         foreach(j; selectedRows) {
             col[j] = value;
          }
       }
@@ -140,10 +160,10 @@ public:
 
    // this = ulong
    void opAssign(ulong value) {
-      for(size_t i = colStart; i < colEnd; i++) {
+      foreach(i; selectedCols) {
          alias SliceType = Slice!(ulong*);
          auto col = data.col(i).get!SliceType;
-         for (size_t j = rowStart; j < rowEnd; j++) {
+         foreach (j; selectedRows) {
             col[j] = value;
          }
 
@@ -152,10 +172,11 @@ public:
 
    // this = float
    void opAssign(float value) {
-      for(size_t i = colStart; i < colEnd; i++) {
+      writeln("selected ROws = ", selectedRows);
+      foreach(i; selectedCols) {
          alias SliceType = Slice!(float*);
          auto col = data.col(i).get!SliceType;
-         for (size_t j = rowStart; j < rowEnd; j++) {
+         foreach (j; selectedRows) {
             col[j] = value;
          }
       }
@@ -163,10 +184,10 @@ public:
 
    // this = double
    void opAssign(double value) {
-      for(size_t i = colStart; i < colEnd; i++) {
+      foreach(i; selectedCols) {
          alias SliceType = Slice!(double*);
          auto col = data.col(i).get!SliceType;
-         for (size_t j = rowStart; j < rowEnd; j++) {
+         foreach (j; selectedRows) {
             col[j] = value;
          }
 
@@ -175,10 +196,10 @@ public:
 
    // this = string
    void opAssign(string value) {
-      for(size_t i = colStart; i < colEnd; i++) {
+      foreach(i; selectedCols) {
          alias SliceType = Slice!(string*);
          auto col = data.col(i).get!SliceType;
-         for (size_t j = rowStart; j < rowEnd; j++) {
+         foreach (j; selectedRows) {
             col[j] = value;
          }
 
@@ -187,78 +208,101 @@ public:
 
    // this = Slice!(int*)
    void opAssign(Slice!(int*) values) {
-      assert(values.elementCount == rowEnd - rowStart, "values should be a slice of size " ~ to!string(rowEnd - rowStart));
+      assert(values.elementCount == selectedRows.length,
+         "values should be a slice of size " ~ to!string(selectedRows.length));
 
-      for (size_t i = colStart; i < colEnd; i++) {
+      foreach (i; selectedCols) {
          alias SliceType = Slice!(int*);
          auto col = data.col(i).get!SliceType;
-         for (size_t j = rowStart; j < rowEnd; j++) {
-            col[j] = values[j - rowStart];
+         size_t k = 0;
+         foreach (j; selectedRows) {
+            col[j] = values[k];
+            k++;
          }
       }
    }
 
    // this = Slice!(long*)
    void opAssign(Slice!(long*) values) {
-      assert(values.elementCount == rowEnd - rowStart, "values should be a slice of size " ~ to!string(rowEnd - rowStart));
+      assert(values.elementCount == selectedRows.length,
+         "values should be a slice of size " ~ to!string(selectedRows.length));
 
-      for (size_t i = colStart; i < colEnd; i++) {
+      foreach (i; selectedCols) {
          alias SliceType = Slice!(long*);
          auto col = data.col(i).get!SliceType;
-         for (size_t j = rowStart; j < rowEnd; j++) {
-            col[j] = values[j - rowStart];
+         size_t k = 0;
+         foreach (j; selectedRows) {
+            col[j] = values[k];
+            k++;
          }
       }
+
    }
 
    // this = Slice!(ulong*)
    void opAssign(Slice!(ulong*) values) {
-      assert(values.elementCount == rowEnd - rowStart, "values should be a slice of size " ~ to!string(rowEnd - rowStart));
+      assert(values.elementCount == selectedRows.length,
+         "values should be a slice of size " ~ to!string(selectedRows.length));
 
-      for (size_t i = colStart; i < colEnd; i++) {
+      foreach (i; selectedCols) {
          alias SliceType = Slice!(ulong*);
          auto col = data.col(i).get!SliceType;
-         for (size_t j = rowStart; j < rowEnd; j++) {
-            col[j] = values[j - rowStart];
+         size_t k = 0;
+         foreach (j; selectedRows) {
+            col[j] = values[k];
+            k++;
          }
       }
+
    }
 
    // this = Slice!(float*)
    void opAssign(Slice!(float*) values) {
-      assert(values.elementCount == rowEnd - rowStart, "values should be a slice of size " ~ to!string(rowEnd - rowStart));
 
-      for (size_t i = colStart; i < colEnd; i++) {
+      assert(values.elementCount == selectedRows.length,
+         "values should be a slice of size " ~ to!string(selectedRows.length));
+
+      foreach (i; selectedCols) {
          alias SliceType = Slice!(float*);
          auto col = data.col(i).get!SliceType;
-         for (size_t j = rowStart; j < rowEnd; j++) {
-            col[j] = values[j - rowStart];
+         size_t k = 0;
+         foreach (j; selectedRows) {
+            col[j] = values[k];
+            k++;
          }
       }
+
    }
 
    // this = Slice!(double*)
    void opAssign(Slice!(double*) values) {
-      assert(values.elementCount == rowEnd - rowStart, "values should be a slice of size " ~ to!string(rowEnd - rowStart));
 
-      for (size_t i = colStart; i < colEnd; i++) {
+      assert(values.elementCount == selectedRows.length,
+         "values should be a slice of size " ~ to!string(selectedRows.length));
+
+      foreach (i; selectedCols) {
          alias SliceType = Slice!(double*);
          auto col = data.col(i).get!SliceType;
-         for (size_t j = rowStart; j < rowEnd; j++) {
-            col[j] = values[j - rowStart];
+         size_t k = 0;
+         foreach (j; selectedRows) {
+            col[j] = values[k];
+            k++;
          }
       }
    }
 
    // this = Slice!(string*)
    void opAssign(Slice!(string*) values) {
-      assert(values.elementCount == rowEnd - rowStart, "values should be a slice of size " ~ to!string(rowEnd - rowStart));
+      assert(values.elementCount == selectedRows.length,
+         "values should be a slice of size " ~ to!string(selectedRows.length));
 
-      for (size_t i = colStart; i < colEnd; i++) {
+      foreach (i; selectedCols) {
          alias SliceType = Slice!(string*);
          auto col = data.col(i).get!SliceType;
-         for (size_t j = rowStart; j < rowEnd; j++) {
-            col[j] = values[j - rowStart];
+         size_t k = 0;
+         foreach (j; selectedRows) {
+            col[j] = values[k];
+            k++;
          }
       }
    }
@@ -267,15 +311,18 @@ public:
    void assign(Rs...)(Tuple!Rs values) {
       enum size_t cols = values.length;
       static foreach(i; 0..cols) {
-         assert(values[i].elementCount == rowEnd - rowStart, "values[" ~ i.to!string ~ " should be a slice of size "
-            ~ to!string(rowEnd - rowStart));
+         assert(values[i].elementCount == selectedRows.length, "values[" ~ i.to!string ~ " should be a slice of size "
+            ~ to!string(selectedRows.length));
       }
+
       static foreach(i; 0..cols) {
          {
             alias SliceType = Rs[i];
-            auto col = data.col(i + colStart).get!SliceType;
-            for (size_t j = rowStart; j < rowEnd; j++) {
-               col[j] = values[i][j - rowStart];
+            auto col = data.col(i).get!SliceType;
+            size_t k = 0;
+            foreach(j; selectedRows) {
+               col[j] = values[i][k];
+               k++;
             }
          }
       }
@@ -283,34 +330,31 @@ public:
 
    // Convert to a slice
    Slice!(T*) slice(T)() {
-      assert((colStart + 1 == colEnd) || (colStart + 1 != colEnd && rowStart + 1 == rowEnd),
-         "DataFrameSlice must have only one row or one column to convert it to a Slice!(T*)");
-      if (colStart + 1 == colEnd) {
-         // colStart + 1 = colEnd
-         alias SliceType = Slice!(T*);
-         auto col = data.col(colStart).get!SliceType;
-         return col;
-      } else {
-         // rowStart + 1 == rowEnd
-         size_t cols = colEnd - colStart;
-         auto col = empty!T(cols);
-         for (size_t i = colStart; i < colEnd; i++) {
-            col[i - colStart] = data[rowStart, i].get!T;
+      size_t cols = selectedCols.length;
+      size_t rows = selectedRows.length;
+      alias SliceType = Slice!(T*);
+      auto slice = empty!T(cols*rows);
+      size_t k = 0;
+      foreach(i; 0..selectedCols.length) {
+         auto col = data.col(i).get!SliceType;
+         foreach(j; selectedRows) {
+            slice[k] = col[j];
          }
-         return col;
+         k++;
       }
+      return slice;
    }
 
 
    // Convert to a matrix
    Slice!(T*, 2) matrix(T)() {
       alias SliceType = Slice!(T*, 2);
-      size_t cols = colEnd - colStart;
-      size_t rows = rowEnd - rowStart;
-      auto mat = empty!T([rows, cols]);
-      for (size_t i = rowStart; i < rowEnd; i++) {
-         for (size_t j = colStart; j < colEnd; j++) {
-            mat[i-rowStart, j-colStart] = data[i, j].get!T;
+      auto mat = empty!T([selectedRows.length, selectedCols.length]);
+      size_t k = 0;
+      foreach(i; selectedRows) {
+         foreach(j; selectedCols) {
+            mat.iterator[k] = data[i, j].get!T;
+            k++;
          }
       }
       return mat;
@@ -318,22 +362,17 @@ public:
 
    override string toString() {
       string str = "DataFrameSlice[";
-
-      str ~= rowStart.to!string;
-      str ~= "..";
-      str ~= rowEnd.to!string;
-      str ~= ", ";
-      str ~= colStart.to!string;
-      str ~= "..";
-      str ~= colEnd.to!string;
+      str ~= selectedRows.length.to!string;
+      str ~= "x";
+      str ~= selectedCols.length.to!string;
       str ~= "]\n";
 
-      for(size_t j = colStart; j < colEnd; j++) {
+      foreach(j; 0..selectedCols.length) {
          str ~= data.name(j);
          str ~= ": ";
          auto col = data.col(j);
          str ~= to!string(col);
-         if (j + 1 < colEnd) {
+         if (j + 1 < selectedCols.length) {
            str ~= "\n";
          }
       }
@@ -363,6 +402,18 @@ private:
          }
       }
       return value;
+   }
+
+   // Return the index of the column name
+   long indexColName(string name) const {
+      long idx = -1;
+      foreach(i; 0..Ts.length) {
+         if (colNames[i] == name) {
+            idx = i;
+            break;
+         }
+      }
+      return idx;
    }
 
 
@@ -523,6 +574,28 @@ public:
       return df;
    }
 
+   // Remove a column at Index
+   auto removeCol(size_t Index)() const {
+      static if (Index == 0) {
+         auto df = new TypedDataFrame!(Ts[1..Ts.length])();
+      } else {
+         auto df = new TypedDataFrame!(Ts[0..Index], Ts[Index+1..Ts.length])();
+      }
+      writeln(df.names());
+      // Copy data
+      static if (Index > 0) {
+         static foreach(i; 0..Index) {
+            df.setCol!(Ts[i])(i, this.name(i), this.col(i));
+         }
+      }
+      static if (Index > 0 && Index < Ts.length) {
+         static foreach(i; Index+1..Ts.length) {
+            df.setCol!(Ts[i])(i-1, this.name(i-1), this.col(i-1));
+         }
+      }
+      return df;
+   }
+
    // Get the column at index [index]
    ColumnValue opIndex(size_t index) const {
       return col(index);
@@ -569,23 +642,42 @@ public:
 
    // Overload [[], ]
    DataFrameSlice!Ts opIndex(size_t[] i, size_t j) {
-      DataFrameSlice!Ts df = new DataFrameSlice!Ts(this, i, [j]);
+      DataFrameSlice!Ts df = new DataFrameSlice!Ts(this, i, [j], true);
       return df;
    }
 
    // Overload [ , []]
    DataFrameSlice!Ts opIndex(size_t i, size_t[] j) {
-      DataFrameSlice!Ts df = new DataFrameSlice!Ts(this, [i], j);
+      DataFrameSlice!Ts df = new DataFrameSlice!Ts(this, [i], j, true);
       return df;
    }
 
+   // Overload [[], []]
    DataFrameSlice!Ts opIndex(size_t[] i, size_t[] j) {
-      DataFrameSlice!Ts df = new DataFrameSlice!Ts(this, i, j);
+      DataFrameSlice!Ts df = new DataFrameSlice!Ts(this, i, j, true);
       return df;
    }
 
    size_t[2] opSlice(size_t dim)(size_t start, size_t end) {
       return [start, end];
+   }
+
+   // Select rows and columns
+   DataFrameSlice!Ts select(ulong[] rows, ulong[] cols) {
+      DataFrameSlice!Ts df = new DataFrameSlice!Ts(this, rows, cols, false);
+      return df;
+   }
+
+   // Select rows and columns using names
+   DataFrameSlice!Ts select(ulong[] rows, string[] names) {
+      ulong[] cols;
+      cols.length = names.length;
+      for(size_t i = 0; i < names.length; i++) {
+         long idx = indexColName(names[i]);
+         assert(idx != -1);
+         cols[i] = cast(ulong) idx;
+      }
+      return select(rows, cols);
    }
 
    // Head first 5 rows with corresponding rows

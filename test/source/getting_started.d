@@ -13,6 +13,8 @@ import std.sumtype;
 
 void testGettingStarted()
 {
+   writeln("Getting started -----------");
+
    {
       size_t n = 6;
       auto x = zeros!float(n);
@@ -30,10 +32,12 @@ void testGettingStarted()
       auto z = ["a", "b", "c", "d", "e", "f"].sliced(n);
 
       auto df = dataFrame!(float, double, string)("x", x, "y", y, "z", z);
+      writeln("head");
       writeln(df.head());
+      writeln("tail");
       writeln(df.tail());
 
-      // Access columns
+      writeln("Access columns");
       writeln(df["x"]);
    }
 
@@ -86,6 +90,22 @@ void testGettingStarted()
       // Slicing
       auto slice = df[0..3, 0..2].matrix!float;
       writeln(slice);
+   }
+
+   {
+      writeln("Remove a column");
+      auto df = dataFrame!(float, float)("x", ones!float(3), "y", zeros!float(3));
+      writeln(df);
+      auto newdf = df.removeCol!1();
+      writeln(newdf);
+   }
+
+   {
+      writeln("Remove a column by its name");
+      auto df = dataFrame!(float, float)("x", ones!float(3), "y", zeros!float(3));
+      writeln(df);
+      auto newdf = df.removeCol("y");
+      writeln(newdf);
    }
 
 }

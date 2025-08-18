@@ -1,6 +1,7 @@
 import testdataframe.basics;
 import testdataframe.creation;
 import testdataframe.gettingstarted;
+import testdataframe.selection;
 import testdataframe.io;
 
 void main()
@@ -8,5 +9,6 @@ void main()
    testBasics();
    testCreation();
    testGettingStarted();
+   testSelection();
    testIo();
 }
