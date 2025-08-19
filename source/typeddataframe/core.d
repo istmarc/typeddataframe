@@ -610,13 +610,12 @@ public:
    }
 
    // Remove a column at Index
-   auto removeCol(size_t Index)() const {
+   auto removeCol(size_t Index)() {
       static if (Index == 0) {
          auto df = new TypedDataFrame!(IndexType, Ts[1..Ts.length])();
       } else {
          auto df = new TypedDataFrame!(IndexType, Ts[0..Index], Ts[Index+1..Ts.length])();
       }
-      writeln(df.names());
       // Copy data
       static if (Index > 0) {
          static foreach(i; 0..Index) {
@@ -628,6 +627,8 @@ public:
             df.setCol!(Ts[i])(i-1, this.name(i-1), this.col(i-1));
          }
       }
+      // Copy index
+      df.setIndex(index);
       return df;
    }
 
