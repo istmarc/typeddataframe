@@ -95,9 +95,41 @@ void testGettingStarted()
 
    {
       writeln("Remove a column");
-      auto df = dataFrame!(ulong, float, float)("x", ones!float(3), "y", zeros!float(3));
+      auto df = dataFrame!(ulong, float, float, float)("x", ones!float(3), "y", zeros!float(3), "z", ones!float(3));
       writeln(df);
       auto newdf = df.removeCol!1();
+      writeln(newdf);
+   }
+
+   {
+      writeln("Remove the first column");
+      auto df = dataFrame!(ulong, float, float, float)("x", ones!float(3), "y", zeros!float(3), "z", ones!float(3));
+      writeln(df);
+      auto newdf = df.removeCol!0();
+      writeln(newdf);
+   }
+
+   {
+      writeln("Remove the first column and return a DataFrameSlice");
+      auto df = dataFrame!(ulong, float, float, float)("x", ones!float(3), "y", zeros!float(3), "z", ones!float(3));
+      writeln(df);
+      auto newdf = df.removeCol(0);
+      writeln(newdf);
+   }
+
+   {
+      writeln("Remove the second column and return a DataFrameSlice");
+      auto df = dataFrame!(ulong, float, float, float)("x", ones!float(3), "y", zeros!float(3), "z", ones!float(3));
+      writeln(df);
+      auto newdf = df.removeCol(1);
+      writeln(newdf);
+   }
+
+   {
+      writeln("Remove the second column by its name and return a DataFrameSlice");
+      auto df = dataFrame!(ulong, float, float, float)("x", ones!float(3), "y", zeros!float(3), "z", ones!float(3));
+      writeln(df);
+      auto newdf = df.removeCol("y");
       writeln(newdf);
    }
 

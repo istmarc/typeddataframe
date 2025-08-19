@@ -31,21 +31,27 @@ void testSelection()
 
       auto z = ["a", "b", "c", "d", "e", "f"].sliced(n);
 
-      auto df = dataFrame!(ulong, float, double, string)("x", x, "y", y, "z", z);
-
       {
+         auto df = dataFrame!(ulong, float, double, string)("x", x, "y", y, "z", z);
          auto newdf = df.select([0,n], ["x"]);
          writeln(newdf);
       }
 
       {
+         auto df = dataFrame!(ulong, float, double, string)("x", x, "y", y, "z", z);
          auto newdf = df.select([0,n], ["x", "y"]);
          writeln(newdf);
       }
 
       {
+         auto df = dataFrame!(ulong, float, double, string)("x", x, "y", y, "z", z);
          auto newdf = df.select([0], ["x", "y"]);
          writeln(newdf);
+      }
+
+      {
+         auto df = dataFrame!(string, float, double, string)("x", x, "y", y, "z", z, ["X", "Y", "Z", "T", "R", "S"].sliced(n));
+         writeln(df);
       }
 
    }

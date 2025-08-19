@@ -368,9 +368,9 @@ public:
       str ~= "]\n";
 
       foreach(j; 0..selectedCols.length) {
-         str ~= data.name(j);
+         str ~= data.name(selectedCols[j]);
          str ~= ": ";
-         auto col = data.col(j);
+         auto col = data.col(selectedCols[j]);
          str ~= to!string(col);
          if (j + 1 < selectedCols.length) {
            str ~= "\n";
@@ -609,7 +609,7 @@ public:
       return df;
    }
 
-   // Remove a column at Index
+   // Remove a column at Index, return a new data frame
    auto removeCol(size_t Index)() {
       static if (Index == 0) {
          auto df = new TypedDataFrame!(IndexType, Ts[1..Ts.length])();
@@ -617,6 +617,11 @@ public:
          auto df = new TypedDataFrame!(IndexType, Ts[0..Index], Ts[Index+1..Ts.length])();
       }
       // Copy data
+      static if (Index == 0) {
+         static foreach(i; 1..Ts.length){
+            df.setCol!(Ts[i])(i-1, this.name(i), this.col(i));
+         }
+      }
       static if (Index > 0) {
          static foreach(i; 0..Index) {
             df.setCol!(Ts[i])(i, this.name(i), this.col(i));
@@ -630,6 +635,33 @@ public:
       // Copy index
       df.setIndex(index);
       return df;
+   }
+
+   // Remove a column at index, return a DataFrameSlice
+   DataFrameSlice!(IndexType, Ts) removeCol(size_t index) {
+      assert(index >= 0 && index < cols(), "Invalid index");
+      ulong[] rowIndices;
+      rowIndices.length = rows();
+      foreach(i; 0..rowIndices.length) {
+         rowIndices[i] = i;
+      }
+      ulong[] colIndices;
+      colIndices.length = cols() - 1;
+      size_t k = 0;
+      foreach(i; 0..cols()) {
+         if (i != index) {
+            colIndices[k] = i;
+            k++;
+         }
+      }
+      auto df = new DataFrameSlice!(IndexType, Ts)(this, rowIndices, colIndices, false);
+      return df;
+   }
+
+   DataFrameSlice!(IndexType, Ts) removeCol(string name) {
+      size_t idx = indexColName(name);
+      assert(idx != -1, "Invalid column name.");
+      return removeCol(idx);
    }
 
    // Get the column at index [index]
