@@ -9,6 +9,7 @@ import std.typecons;
 import std.string;
 import std.meta;
 import std.algorithm: min, max;
+import std.array: array;
 
 import mir.ndslice;
 import numir;
@@ -417,6 +418,17 @@ private:
       return idx;
    }
 
+   ulong[] getColumnIndices(string[] names) const {
+      ulong[] cols;
+      cols.length = names.length;
+      for(size_t i = 0; i < names.length; i++) {
+         long idx = indexColName(names[i]);
+         assert(idx != -1);
+         cols[i] = cast(ulong) idx;
+      }
+      return cols;
+   }
+
 public:
    this(const(string) title = "") {
       this.title = title;
@@ -738,30 +750,67 @@ public:
 
    // Select rows and columns using names
    DataFrameSlice!(IndexType, Ts) select(ulong[] rows, string[] names) {
-      ulong[] cols;
-      cols.length = names.length;
-      for(size_t i = 0; i < names.length; i++) {
-         long idx = indexColName(names[i]);
-         assert(idx != -1);
-         cols[i] = cast(ulong) idx;
+      ulong[] cols = getColumnIndices(names);
+      return select(rows, cols);
+   }
+
+   // Select rows and column using a condition
+   DataFrameSlice!(IndexType, Ts) select(bool[] rowsCond, ulong[] cols) {
+      ulong[] rows;
+      size_t length = 0;
+      for (size_t i = 0; i < rowsCond.length; i++) {
+         if (rowsCond[i]) {
+            length++;
+         }
+      }
+      rows.length = length;
+      size_t k = 0;
+      for (size_t i = 0; i < rowsCond.length; i++) {
+         if (rowsCond[i]) {
+            rows[k] = i;
+            k++;
+         }
       }
       return select(rows, cols);
    }
 
+   // Select rows and columns using a condition, cols by names
+   DataFrameSlice!(IndexType, Ts) select(bool[] rowsCond, string[] names) {
+      ulong[] cols = getColumnIndices(names);
+      return select(rowsCond, cols);
+   }
+
+   // Select rows and column using a condition on a bool slice
+   DataFrameSlice!(IndexType, Ts) select(Slice!(bool*) rowsCond, ulong[] cols) {
+      return select(rowsCond.array, cols);
+   }
+
+   // Select rows and column using a condition on a bool slice, cols by names
+   DataFrameSlice!(IndexType, Ts) select(Slice!(bool*) rowsCond, string[] names) {
+      ulong[] cols = getColumnIndices(names);
+      return select(rowsCond.array, cols);
+   }
+
+   // TODO Select rows and columns using the index
+   //DataFrameSlice!(IndexType, Ts) select(Slice(IndexType*) rows, ulong[] cols) {
+   //}
+
    // Head first 5 rows with corresponding rows
-   DataFrameSlice!(IndexType, Ts) head() {
+   DataFrameSlice!(IndexType, Ts) head(size_t n = 5) {
       assert(!empty(), "Data frame must not be empty");
       size_t col = cols();
       size_t row = rows();
-      return this[0..min(5, row), 0..col];
+      assert(n >= 1 && n<=row);
+      return this[0..min(n, row), 0..col];
    }
 
    // Tail last 5 rows with corresponding columns
-   DataFrameSlice!(IndexType, Ts) tail() {
+   DataFrameSlice!(IndexType, Ts) tail(size_t n = 5) {
       assert(!empty(), "Data frame must not be empty");
       size_t col = cols();
       size_t row = rows();
-      return this[max(0, row-5)..row, 0..col];
+      assert(n>= 1 && row >= n);
+      return this[max(0, row-n)..row, 0..col];
    }
 
 

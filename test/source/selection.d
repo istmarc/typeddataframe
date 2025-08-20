@@ -10,6 +10,7 @@ import mir.ndslice;
 import std.conv;
 import std.typecons;
 import std.sumtype;
+import std.array: array;
 
 void testSelection()
 {
@@ -45,14 +46,17 @@ void testSelection()
 
       {
          auto df = dataFrame!(ulong, float, double, string)("x", x, "y", y, "z", z);
-         auto newdf = df.select([0], ["x", "y"]);
+         auto newdf = df.select([0uL], ["x", "y"]);
          writeln(newdf);
       }
 
       {
+         writeln("Select by condition on indices");
          auto df = dataFrame!(string, float, double, string)("x", x, "y", y, "z", z, ["X", "Y", "Z", "T", "R", "S"].sliced(n));
-         writeln(df);
+         auto df1 = df.select([true, true, false, true, false, false], df.names().array);
+         writeln(df1);
       }
 
    }
+
 }
