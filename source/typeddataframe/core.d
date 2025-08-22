@@ -16,6 +16,92 @@ import numir;
 
 import std.stdio;
 
+import mir.ndslice: zip, map, slice;
+
+// Logical operators
+
+Slice!(bool*) and(Slice!(const(bool)*) a, Slice!(const(bool)*) b) {
+   auto res = uninitSlice!bool(a.shape());
+   for (size_t i = 0; i < a.elementCount; i++) {
+      res.iterator[i] = a.iterator[i] && b.iterator[i];
+   }
+   return res;
+}
+
+Slice!(bool*) or(Slice!(const(bool)*) a, Slice!(const(bool)*) b) {
+   auto res = uninitSlice!bool(a.shape());
+   for (size_t i = 0; i < a.elementCount; i++) {
+      res.iterator[i] = a.iterator[i] || b.iterator[i];
+   }
+   return res;
+}
+
+// Comparison operators
+Slice!(bool*, 1, Kind) gt(T, SliceKind Kind)(Slice!(const(T)*, 1, Kind) a, Slice!(const(T)*, 1, Kind) b) {
+   auto gt = (a,b) => zip(a, b).map!"a > b";
+   return gt.sliced;
+}
+
+Slice!(bool*, 1, Kind) lt(T, SliceKind Kind)(Slice!(const(T)*, 1, Kind) a, Slice!(const(T)*, 1, Kind) b) {
+   auto cond = (a,b) => zip(a, b).map!"a < b";
+   return cond.sliced;
+}
+
+Slice!(bool*, 1, Kind) ge(T, SliceKind Kind)(Slice!(const(T)*, 1, Kind) a, Slice!(const(T)*, 1, Kind) b) {
+   auto cond = (a,b) => zip(a, b).map!"a >= b";
+   return cond.sliced;
+}
+
+Slice!(bool*, 1, Kind) le(T, SliceKind Kind)(Slice!(const(T)*, 1, Kind) a, Slice!(const(T)*, 1, Kind) b) {
+   auto cond = (a,b) => zip(a, b).map!"a <= b";
+   return cond.sliced;
+}
+
+Slice!(bool*, 1, Kind) eq(T, SliceKind Kind)(Slice!(const(T)*, 1, Kind) a, Slice!(const(T)*, 1, Kind) b) {
+   auto cond = (a,b) => zip(a, b).map!"a == b";
+   return cond.sliced;
+}
+
+// Comparison operators
+Slice!(bool*) gt(T, SliceKind Kind)(Slice!(const(T)*, 1, Kind) a, T b) {
+   auto res = uninitSlice!bool(a.shape());
+   for (size_t i = 0; i < a.elementCount; i++) {
+      res.iterator[i] = a.iterator[i] > b;
+   }
+   return res;
+}
+
+Slice!(bool*) lt(T, SliceKind Kind)(Slice!(const(T)*, 1, Kind) a, T b) {
+   auto res = uninitSlice!bool(a.shape());
+   for (size_t i = 0; i < a.elementCount; i++) {
+      res.iterator[i] = a.iterator[i] < b;
+   }
+   return res;
+}
+
+Slice!(bool*) ge(T, SliceKind Kind)(Slice!(const(T)*, 1, Kind) a, T b) {
+   auto res = uninitSlice!bool(a.shape());
+   for (size_t i = 0; i < a.elementCount; i++) {
+      res.iterator[i] = a.iterator[i] >= b;
+   }
+   return res;
+}
+
+Slice!(bool*) le(T, SliceKind Kind)(Slice!(const(T)*, 1, Kind) a, T b) {
+   auto res = uninitSlice!bool(a.shape());
+   for (size_t i = 0; i < a.elementCount; i++) {
+      res.iterator[i] = a.iterator[i] <= b;
+   }
+   return res;
+}
+Slice!(bool*) eq(T, SliceKind Kind)(Slice!(const(T)*, 1, Kind) a, T b) {
+   auto res = uninitSlice!bool(a.shape());
+   for (size_t i = 0; i < a.elementCount; i++) {
+      res.iterator[i] = a.iterator[i] == b;
+   }
+   return res;
+}
+
 /++
 Type of the column.
 +/
